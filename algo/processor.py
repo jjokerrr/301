@@ -63,7 +63,7 @@ def do_normal_work(data, img, image_and_action_out_queue, evaluation_and_suggest
                 handler.put_evaluation_and_suggestion_result(evaluation_and_suggestion_out_queue,
                                                             (id, pre_action_id[id], res2, algo_type))
         # 返回action_id阶段中，与标准动作差异最小的数据
-        eval_data[id] = evaluator.get_min_distance_data(id, key_points[id], pre_action_id[id], action_id)
+        eval_data[id] = evaluator.get_min_distance_data(id, key_points[id], pre_action_id[id], action_id, algo_type)
         pre_action_id[id] = action_id
 
 

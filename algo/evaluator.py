@@ -16,11 +16,11 @@ def get_dist_between_2_points(key_points_i, p1, standard_data, p2):
                 key_points_i[p1][1] - standard_data[str(p2)][1]) ** 2)
 
 
-def get_min_distance_data(person_id, pose_data_for_one, pre_action_id, action_id):
+def get_min_distance_data(person_id, pose_data_for_one, pre_action_id, action_id, algo_type):
     """
     返回action_id阶段中，与标准动作差异最小的数据
     """
-    if action_id <= 0 or action_id > 4:
+    if action_id <= 0 or ((algo_type != 3 and action_id > 3) or (algo_type == 3 and action_id > 2)):
         return None
 
     global MIN_DIS_ARR
@@ -30,7 +30,23 @@ def get_min_distance_data(person_id, pose_data_for_one, pre_action_id, action_id
         MIN_DIS_ARR[person_id] = float('inf')
         EVAL_DATA_ARR[person_id] = None
 
-    standard_data = read_json_from_path('algo/mock_data/standard_data_' + str(action_id) + '.json')
+    # 将algo_type映射到文件夹名称
+    # 场景类型：
+    # 1. 投远 => algo_type = 4
+    # 2. 投准 => algo_type = 5
+    # 3. 侧甩 => algo_type = 0
+    # 4. 滚手榴弹 => algo_type = 1
+    # 5. 抛手榴弹 => algo_type = 2
+    # 6. 塞手榴弹 => algo_type = 3
+    algo_map = {
+        0: "sideThrow",
+        1: "roll",
+        2: "throw",
+        3: "stuff",
+        4: "throwFar",
+        5: "throwDirect"
+    }
+    standard_data = read_json_from_path(f'algo/mock_data/{algo_map[algo_type]}/standard_data_' + str(action_id) + '.json')
 
     distance = 0
     for i in range(len(standard_data)):

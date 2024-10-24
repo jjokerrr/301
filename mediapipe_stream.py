@@ -13,7 +13,7 @@ pull_url_list = ['/home/tzo/301_24/backend/videos/0000.mp4',
             '/home/tzo/301_24/backend/videos/0004.mp4',
             '/home/tzo/301_24/backend/videos/0005.mp4']
 
-push_url = 'rtmp://172.22.192.1/live/pushstream'
+push_url = 'rtmp://172.30.64.1/live/pushstream'
 ffmpeg_win_path = '/usr/bin/ffmpeg'
 ffmpeg_linux_path = 'ffmpeg'
 
