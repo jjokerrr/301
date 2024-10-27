@@ -104,6 +104,23 @@ def generate_vid_mock_data(vid_path, if_black):
     print("Process video done, " + output_file)
 
 
+def mock_data_finetune(data_base):
+    for key, value in algo_dict.items():
+        data_dir = os.path.join(data_base, value)
+        for file in os.listdir(data_dir):
+            if file.endswith("_fixed.json"):
+                continue
+            filename = file.split('.')[0] + "_2560*1440_fixed.json"
+            with open(os.path.join(data_dir, file), "r+") as f:
+                lst = json.loads(f.read())
+            for k, v in lst.items():
+                v[0] = v[0] * 2560
+                v[1] = v[1] * 1440
+            with open(os.path.join(data_dir, filename), "w+") as f:
+                f.write(json.dumps(lst))
+            print(f"{filename} done.")
+            
+
 if __name__ == "__main__":
     # ------------------------------- Tune input data config in this block ----------------------------
     basedir = "/home/tzo/301_24/backend"
@@ -132,7 +149,8 @@ if __name__ == "__main__":
     action_stage = None
     if_black = True
     # -------------------------------------------- End of block ---------------------------------------
-    if src_type == "video":
-        generate_vid_mock_data(src_vid, if_black)
-    elif src_type == "image":
-        generate_img_mock_data(src_img_dir, output_folder, algo_type, if_batch_inference)
+    # if src_type == "video":
+    #     generate_vid_mock_data(src_vid, if_black)
+    # elif src_type == "image":
+    #     generate_img_mock_data(src_img_dir, output_folder, algo_type, if_batch_inference)
+    mock_data_finetune(output_folder)

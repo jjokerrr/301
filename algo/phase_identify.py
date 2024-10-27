@@ -376,10 +376,10 @@ def __identify_single_person_sideThrow(id, pose_data_for_one):
             return StatusArr[id]
 
         # 卧倒进入下一阶段
-        # 大腿之间的角度大于90度且左大小臂之间角度小于120度
+        # 大腿之间的角度大于60度
         print("angle_between_thighs=%f" % angle_between_thighs)
         print("angle_between_left_arms=%f" % angle_between_left_arms)
-        if angle_between_thighs > 90 and angle_between_left_arms < 120:
+        if angle_between_thighs > 60:
             StatusArr[id] = 1
     elif StatusArr[id] == 1:  # 拉
         # 右臂与左大臂夹角大于30度进入引阶段
@@ -461,7 +461,7 @@ def __identify_single_person_roll(id, pose_data_for_one):
         print("shoulder_center_point_horizontal_value=%f" % shoulder_center_point_horizontal_value)
         # print("height_width_ratio=%f" % height_width_ratio)
 
-        if right_hand_point_horizontal_value < shoulder_center_point_horizontal_value and angle_between_right_arms > 120:  # 右手在右肩往左并且大小臂夹角超过120度
+        if right_hand_point_horizontal_value < shoulder_center_point_horizontal_value and angle_between_right_arms > 80:  # 右手在右肩往左并且大小臂夹角超过80度
             StatusArr[id] = 3
     elif StatusArr[id] == 3:  # 投
         try:
@@ -475,7 +475,7 @@ def __identify_single_person_roll(id, pose_data_for_one):
         print("shoulder_center_point_horizontal_value=%f" % shoulder_center_point_horizontal_value)
         # print("height_width_ratio=%f" % height_width_ratio)
 
-        if right_hand_point_horizontal_value > shoulder_center_point_horizontal_value and angle_between_right_arms < 120:  # 右手在右肩往右且右大小臂夹角小于120度
+        if right_hand_point_horizontal_value > shoulder_center_point_horizontal_value and angle_between_right_arms < 80:  # 右手在右肩往右且右大小臂夹角小于80度
             StatusArr[id] = 5
 
     # 投完结束离场    

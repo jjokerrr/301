@@ -13,12 +13,12 @@ pull_url_list = ['/home/tzo/301_24/backend/videos/0000.mp4',
             '/home/tzo/301_24/backend/videos/0004.mp4',
             '/home/tzo/301_24/backend/videos/0005.mp4']
 
-push_url = 'rtmp://172.30.64.1/live/pushstream'
+pull_url = "rtmp://172.30.64.1/live/livestream"
+# push_url = 'rtmp://172.30.64.1/live/pushstream'
 ffmpeg_win_path = '/usr/bin/ffmpeg'
 ffmpeg_linux_path = 'ffmpeg'
-
-
-def rtmp_start(image_in_queue, flag, algo_type):
+count = 0
+def rtmp_start(image_in_queue, flag, algo_type, push_url):
     # 读取的rtmp数据流
     
 
@@ -27,7 +27,7 @@ def rtmp_start(image_in_queue, flag, algo_type):
     elif platform.system().lower() == 'linux':
         ffmpeg_path = ffmpeg_linux_path
 
-    pull_url = pull_url_list[algo_type.value]
+    # pull_url = pull_url_list[algo_type.value]
     while True:
         # 使用FFmpeg检查RTMP流状态
         cmd = [ffmpeg_path, '-i', pull_url]
@@ -51,12 +51,29 @@ def rtmp_start(image_in_queue, flag, algo_type):
     
 
     # 产生一个推流pipe，推送到push_url上
+
+    # 本地视频流用这个
+    # command = [ffmpeg_path,
+    #             '-y', '-an',
+    #             '-f', 'rawvideo',
+    #             '-vcodec', 'rawvideo',
+    #             '-pix_fmt', 'bgr24',
+    #             '-s', '1920*1080',
+    #             '-r', '10',
+    #             '-i', '-',
+    #             '-c:v', 'libx264',
+    #             '-pix_fmt', 'yuv420p',
+    #             '-preset', 'ultrafast',
+    #             '-f', 'flv',
+    #             push_url]
+    
+    # 摄像头用这个
     command = [ffmpeg_path,
                 '-y', '-an',
                 '-f', 'rawvideo',
                 '-vcodec', 'rawvideo',
                 '-pix_fmt', 'bgr24',
-                '-s', '1920*1080',
+                '-s', '2560*1440',
                 '-r', '10',
                 '-i', '-',
                 '-c:v', 'libx264',
@@ -70,14 +87,14 @@ def rtmp_start(image_in_queue, flag, algo_type):
     sleep(1)
     while True:
         if flag.value:
-            pull_url = pull_url_list[algo_type.value]
+            # pull_url = pull_url_list[algo_type.value]
             print('compute start, current pull url : ' + pull_url)
             cap = cv2.VideoCapture(pull_url)
             ret = cap.grab()
             while flag.value:
                 ret, image = cap.retrieve()
                 if not ret:
-                    print('fail to retrieve image')
+                    # print('fail to retrieve image')
                     continue
                 # 经过姿态估计处理
                 image.flags.writeable = False

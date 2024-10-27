@@ -46,7 +46,11 @@ def get_min_distance_data(person_id, pose_data_for_one, pre_action_id, action_id
         4: "throwFar",
         5: "throwDirect"
     }
-    standard_data = read_json_from_path(f'algo/mock_data/{algo_map[algo_type]}/standard_data_' + str(action_id) + '.json')
+    # 本地视频用这个
+    standard_data = read_json_from_path(f'algo/mock_data/{algo_map[algo_type]}/standard_data_' + str(action_id) + '_fixed.json')
+
+    # 摄像头用这个
+    standard_data = read_json_from_path(f'algo/mock_data/{algo_map[algo_type]}/standard_data_' + str(action_id) + '_2560*1440_fixed.json')
 
     distance = 0
     for i in range(len(standard_data)):
@@ -189,7 +193,9 @@ def eval_throwFar(person_id, pose_data_for_one):
         # 比较右肘与右肩的垂直方向坐标，右肘不应低于右肩
         right_elbow_point_vertical_value = phase_identify.get_point(pose_data_for_one, 14)[1]
         right_shoulder_point_vertical_value = phase_identify.get_point(pose_data_for_one, 12)[1]
-        if right_elbow_point_vertical_value >= right_shoulder_point_vertical_value:
+        print("right_elbow: ", right_elbow_point_vertical_value)
+        print("right_shoulder: ", right_shoulder_point_vertical_value)
+        if right_elbow_point_vertical_value <= right_shoulder_point_vertical_value:
             result_list.append(get_result(3, "height", 2, 0))
         else:
             result_list.append(get_result(3, "height", 0, 0))
@@ -301,7 +307,9 @@ def eval_throwDirect(person_id, pose_data_for_one):
         # 比较右肘与右肩的垂直方向坐标，右肘不应低于右肩
         right_elbow_point_vertical_value = phase_identify.get_point(pose_data_for_one, 14)[1]
         right_shoulder_point_vertical_value = phase_identify.get_point(pose_data_for_one, 12)[1]
-        if right_elbow_point_vertical_value >= right_shoulder_point_vertical_value:
+        print("right_elbow: ", right_elbow_point_vertical_value)
+        print("right_shoulder: ", right_shoulder_point_vertical_value)
+        if right_elbow_point_vertical_value <= right_shoulder_point_vertical_value:
             result_list.append(get_result(3, "height", 2, 0))
         else:
             result_list.append(get_result(3, "height", 0, 0))
@@ -409,11 +417,14 @@ def eval_sideThrow(person_id, pose_data_for_one):
     result_list = []
 
     try:
-        # 评估1：右手高于头部
-        # done
-        right_hand_point_vertical_value = phase_identify.get_point(pose_data_for_one, 16)[1]
-        head_point_vertical_value = phase_identify.get_point(pose_data_for_one, 0)[1]
-        if right_hand_point_vertical_value > head_point_vertical_value:
+        # 评估1：肘部低于肩部
+        # 比较右肘与右肩的垂直方向坐标，右肘不应低于右肩
+        right_elbow_point_vertical_value = phase_identify.get_point(pose_data_for_one, 14)[1]
+        right_shoulder_point_vertical_value = phase_identify.get_point(pose_data_for_one, 12)[1]
+        # print("right_elbow: ", right_elbow_point_vertical_value)
+        # print("right_shoulder: ", right_shoulder_point_vertical_value)
+        distance = right_elbow_point_vertical_value - right_shoulder_point_vertical_value
+        if distance < 30:
             result_list.append(get_result(3, "height", 2, 0))
         else:
             result_list.append(get_result(3, "height", 0, 0))
@@ -445,9 +456,9 @@ def eval_sideThrow(person_id, pose_data_for_one):
 
     try:
         # 评估4：折小臂
-        # 右大臂与右小臂的夹角应在（90度以上）
+        # 右大臂与右小臂的夹角应在（60度以上）
         angle_between_arms = 180 - utils.get_angle_between_lines(pose_data_for_one, 12, 14, 14, 16)
-        if angle_between_arms >= 90:
+        if angle_between_arms >= 60:
             final_result = (get_result(3, "angle", 2, 0)[0],) + \
                            (get_result(3, "angle", 2, 0)[1] % angle_between_arms,) + get_result(3, "angle", 2, 0)[2:5]
             result_list.append(final_result)
@@ -466,10 +477,11 @@ def eval_sideThrow(person_id, pose_data_for_one):
         angle_of_throw = utils.get_angle_by_direction(pose_data_for_one, 12, 16, 0)
         if angle_of_throw > 90:
             angle_of_throw = 180 - angle_of_throw
-        # 出手角度处于30 - 60度都默认为47度
-        if 30 <= angle_of_throw <= 60:
+        print(angle_of_throw)
+        # 出手角度处于20 - 60度都默认为47度
+        if 20 <= angle_of_throw <= 60:
             result_list.append(get_result(3, "spin", 2, 0))
-        elif angle_of_throw < 30:
+        elif angle_of_throw < 20:
             angle_of_throw = random.uniform(30, 44)
             final_result = (get_result(3, "spin", 0, 0)[0],) + (get_result(3, "spin", 0, 0)[1] % angle_of_throw,) + \
                            get_result(3, "spin", 0, 0)[2:5]
@@ -508,7 +520,9 @@ def eval_roll(person_id, pose_data_for_one):
         # 比较右肘与右肩的垂直方向坐标，右肘不应高于右肩
         right_elbow_point_vertical_value = phase_identify.get_point(pose_data_for_one, 3)[1]
         right_shoulder_point_vertical_value = phase_identify.get_point(pose_data_for_one, 2)[1]
-        if right_elbow_point_vertical_value <= right_shoulder_point_vertical_value:
+        print("right_elbow: ", right_elbow_point_vertical_value)
+        print("right_shoulder: ", right_shoulder_point_vertical_value)
+        if right_elbow_point_vertical_value >= right_shoulder_point_vertical_value:
             result_list.append(get_result(3, "height", 2, 0))
         else:
             result_list.append(get_result(3, "height", 0, 0))
@@ -528,7 +542,7 @@ def eval_roll(person_id, pose_data_for_one):
         result_list.append(final_result)
 
     try:
-        # 评估4：肩部发力
+        # 评估3：肩部发力
         # 计算距离的差值
         distance = get_distance_by_error_data(pose_data_for_one)
         if distance < 100:
@@ -539,10 +553,10 @@ def eval_roll(person_id, pose_data_for_one):
         result_list.append(get_result(3, "hard", 2, 0))
 
     try:
-        # 评估5：折小臂
-        # 右大臂与右小臂的夹角应在（150度以上）
+        # 评估4：折小臂
+        # 右大臂与右小臂的夹角应在（90度以上）
         angle_between_arms = 180 - utils.get_angle_between_lines(pose_data_for_one, 12, 14, 14, 16)
-        if angle_between_arms > 150:
+        if angle_between_arms > 90:
             final_result = (get_result(3, "angle", 2, 0)[0],) + \
                            (get_result(3, "angle", 2, 0)[1] % angle_between_arms,) + get_result(3, "angle", 2, 0)[2:5]
             result_list.append(final_result)
@@ -566,7 +580,7 @@ def eval_throw(person_id, pose_data_for_one):
         # done
         right_hand_point_vertical_value = phase_identify.get_point(pose_data_for_one, 16)[1]
         head_point_vertical_value = phase_identify.get_point(pose_data_for_one, 0)[1]
-        if right_hand_point_vertical_value > head_point_vertical_value:
+        if right_hand_point_vertical_value < head_point_vertical_value:
             result_list.append(get_result(3, "height", 2, 0))
         else:
             result_list.append(get_result(3, "height", 0, 0))
@@ -869,7 +883,7 @@ def get_evaluation(person_id, pos_data_for_one, action_id, algo_type):
     # 算法：塞手榴弹
     elif algo_type == 3:
         print("Use algo_type = 3")
-        if action_id == 3:  # 投
+        if action_id == 2:  # 塞
             result_list = eval_stuff(person_id, pos_data_for_one)
         else:
             result_list = eval_default()

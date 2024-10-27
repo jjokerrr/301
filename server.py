@@ -5,13 +5,33 @@ import time
 from process_eval_data import process_eval_data
 from process_img_data import process_img_data
 from multiprocessing import Process, Queue, Value
+from multiprocessing import Manager
 from flask import Flask, request
 from mediapipe_stream import rtmp_start
+from time import sleep
+import ctypes
+import re
 
 
 image_in_queue, image_and_action_out_queue, evaluation_and_suggestion_out_queue = Queue(), Queue(), Queue()
 flag = Value('b', False)
 algo_type = Value('i',0)
+push_url = Manager().Value(ctypes.c_char_p, "")
+
+def is_valid_pushurl(pushurl):
+    # 正则表达式匹配IPv4
+    ipv4_pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+    # 正则表达式匹配完整的URL
+    pattern = r'^rtmp://' + ipv4_pattern + r'/live/pushstream$'
+    
+    # 使用re.match来检查字符串是否匹配正则表达式
+    if re.match(pattern, pushurl):
+        return True
+    else:
+        return False
+
+def chang_to_rtmp(url):
+    return 'rtmp://'+ url + '/live/pushstream'
 
 def run_flask_app(flag, algo_type):
     """由于现场服务器环境问题，只能将Flask应用包装在一个函数里以进程方式启动"""
@@ -51,6 +71,17 @@ def run_flask_app(flag, algo_type):
             image_in_queue.put(("discard", None, None))
             return make_response(200, "Current evaluation is discarded")
         return make_response(200, "Currently there is no evaluation running.")
+    
+    @app.route('/control/pushurl', methods=["GET"])
+    def getPushUrl():
+        """从前端获取推流地址，推流地址写wsl的ip地址
+            请求参数： push_url   推流地址
+        """
+        url = request.args.get('push_url')
+        if len(url) <= 0 or not is_valid_pushurl(chang_to_rtmp(url)):
+            make_response(400, 'illegel push_url, please check your push_url, push_url formate: rtmp://ip/live/pushstream')
+        push_url.value = chang_to_rtmp(url)
+        return make_response(200, "get push_url, current push_url is " + push_url.value)
 
     def make_response(code, msg):
         return {
@@ -80,7 +111,14 @@ if __name__ == '__main__':
     img_process.start()
     print("algo")
     algo_process.start()
+    print("server")
     flask_process = Process(target=run_flask_app, args=(flag, algo_type))
     flask_process.start()
     print("rtmp")
-    rtmp_start(image_in_queue, flag, algo_type)
+    while True: 
+        if is_valid_pushurl(push_url.value):
+            break
+        # print('push_url :'+ push_url.value)
+    print('rtmp push url:' , push_url.value)
+    print('rtmp start')
+    rtmp_start(image_in_queue, flag, algo_type, push_url.value)
